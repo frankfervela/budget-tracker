@@ -1,33 +1,105 @@
 ﻿@page "/"
 @using FinanceTracker.Models
 @using FinanceTracker.Services
-@inject CsvService _csvService
+@inject TransactionsService transactionsService
 
-<div class="w-4/6 items-center">
-    <h1 class="text-2xl font-bold">Budget Tracker</h1>
-    <div class="flex flex-row space-x-10">
-        <div class="flex flex-col p-2 border border-md border-black rounded-md w-min my-5 justify-between">
-            <h1 class="text-lg">Current Balance</h1>
-            <h1 class="font-bold text-lg @(_debitCardTransactions.Select(x => x.Amount).Sum() > 0 ? "text-green-700" : "text-red-500")">$@_debitCardTransactions.Select(x => x.Amount).Sum()</h1>
-        </div>
-        <div class="flex flex-col p-2 border border-md border-black rounded-md w-min my-5 justify-between">
-            <h1 class="text-lg">Total Earnings To Date</h1>
-            <h1 class="font-bold text-lg text-green-700">$@_debitCardTransactions.Where(x => x.Detail.ToUpper() == "CREDIT").Select(x => x.Amount).Sum()</h1>
-        </div>
-        <div class="flex flex-col p-2 border border-md border-black rounded-md w-min my-5 justify-between">
-            <h1 class="text-lg">Total Spending To Date</h1>
-            <h1 class="font-bold text-lg text-red-700">$@_debitCardTransactions.Where(x => x.Detail.ToUpper() == "DEBIT").Select(x => x.Amount).Sum()</h1>
-        </div>
-        
+
+<div class="dark:text-white">
+    <NavLink href="/RecurrentTransactions">Go TO Recurrent Payments</NavLink>
+    <h1 class="text-2xl font-bold">Budget Tracker (@transactionsService.transactions?.Count(x => x.Selected))</h1>
+    <div class="flex flex-row justify-between my-5">
+        <span>
+            <label for="year-filter">Filter By Year</label>
+            <select id="year-filter" class="dark:bg-gray-900" @bind="yearFilter">
+                <option value="all">All</option>
+                @foreach (var year in @transactionsService.transactions?.Select(x => x.PostingDate.Year).Distinct())
+                {
+                    <option value="@year">@year</option>
+                }
+            </select>
+        </span>
+        <span>
+            <label for="month-filter">Filter By Month</label>
+            <select id="month-filter" class="dark:bg-gray-900" @bind="monthFilter">
+                <option value="all">All</option>
+
+                @foreach (var month in @transactionsService.transactions?.Select(x => x.PostingDate.Month).Distinct().OrderDescending())
+                {
+                    <option value="@month">@month</option>
+                }
+            </select>
+        </span>
+        <span>
+            <label for="day-filter">Filter By Day</label>
+            <select id="day-filter" class="dark:bg-gray-900" @bind="dayFilter">
+                <option value="all">All</option>
+
+                @foreach (var day in @transactionsService.transactions?.Select(x => x.PostingDate.Day).Distinct().OrderDescending())
+                {
+                    <option value="@day">@day</option>
+                }
+            </select>
+        </span>
     </div>
-    <div class="">
-        @foreach (var transaction in _debitCardTransactions)
+    <div class="flex flex-row justify-between my-5">
+        <div class="flex flex-col p-2 border-black rounded-md w-auto items-center">
+            <h1 class="text-lg font-semibold">Selection Balance</h1>
+            <h1 class="font-bold text-lg @(@transactionsService.transactions?.FindAll(x => x.PostingDate.Date.Year == (int.TryParse(yearFilter, out int year) ? year : x.PostingDate.Year) && x.PostingDate.Date.Month == (int.TryParse(monthFilter, out int month) ? month : x.PostingDate.Month) && x.PostingDate.Date.Day == (int.TryParse(dayFilter, out int day) ? day : x.PostingDate.Day) && x.Description.ToUpper().Contains(transactionNameFilter.ToUpper())).Select(x => x.Amount).Sum() > 0 ? "text-green-600" : "text-red-600")">
+
+                $@transactionsService.transactions?.FindAll(x => x.PostingDate.Date.Year == (int.TryParse(yearFilter, out int year) ? year : x.PostingDate.Year)
+                                                                 && x.PostingDate.Date.Month == (int.TryParse(monthFilter, out int month) ? month : x.PostingDate.Month)
+                                                                 && x.PostingDate.Date.Day == (int.TryParse(dayFilter, out int day) ? day : x.PostingDate.Day)
+                                                                 && x.Description.ToUpper().Contains(transactionNameFilter.ToUpper())).Select(x => x.Amount).Sum()
+            </h1>
+        </div>
+        <div class="flex flex-col p-2 border-black rounded-md w-auto items-center">
+            <h1 class="text-lg font-semibold">Total Earnings To Date</h1>
+            <h1 class="font-bold text-lg text-green-600">$@transactionsService.transactions?.Where(x => x.Detail.ToUpper() == "CREDIT").Select(x => x.Amount).Sum()</h1>
+        </div>
+        <div class="flex flex-col p-2 border-black rounded-md w-auto items-center">
+            <h1 class="text-lg font-semibold">Total Spending To Date</h1>
+            <h1 class="font-bold text-lg text-red-700">$@transactionsService.transactions?.Where(x => x.Detail.ToUpper() == "DEBIT").Select(x => x.Amount).Sum()</h1>
+        </div>
+
+    </div>
+    <div class="my-5">
+        <hr class="border">
+        <input type="text" placeholder="Search for a transaction by name.." class="w-full p-2 text-lg dark:bg-gray-900" @bind="transactionNameFilter"/>
+        <hr class="border">
+    </div>
+
+    <div class="flex flex-row space-x-5">
+        @if (transactionsService.transactions?.Count(x => x.Selected) > 0)
         {
-            <div class="flex flex-row justify-between text-left my-2">
-                <div class="flex flex-row space-x-10">
+            <button class=" my-5 rounded p-2 text-yellow-500 border border-yellow-500 hover:bg-yellow-500 hover:text-white" @onclick="MakeSelectedTransactionsRecurrent">Toggle recurrence</button>
+            <button class=" my-5 rounded p-2 text-yellow-500 border border-yellow-500 hover:bg-yellow-500 hover:text-white" @onclick="ClearSelectedTransactions">Clear selection</button>
+        }
+
+        @if (transactionsService.transactions?.Count(x => x.IsRecurrent) > 0)
+        {
+            <button class=" my-5 rounded p-2 text-yellow-500 border border-yellow-500 hover:bg-yellow-500 hover:text-white" @onclick="ClearRecurrentTransactions">Clear recurrent items</button>
+        }
+    </div>
+
+    <div class="flex flex-col">
+        @foreach (var transaction in transactionsService.transactions?.FindAll(
+                      (x => x.PostingDate.Date.Year == (int.TryParse(yearFilter, out int year) ? year : x.PostingDate.Year)
+                            && x.PostingDate.Date.Month == (int.TryParse(monthFilter, out int month) ? month : x.PostingDate.Month)
+                            && x.PostingDate.Date.Day == (int.TryParse(dayFilter, out int day) ? day : x.PostingDate.Day)
+                            && x.Description.ToUpper().Contains(transactionNameFilter.ToUpper()))).OrderByDescending(x => x.PostingDate)
+                 )
+        {
+            <div class="flex flex-row justify-between items-center hover:bg-gray-800 hover:cursor-pointer hover:text-white p-2 @(transaction.Selected ? "bg-gray-800 text-white" : "")" @onclick="(w) => AddToSelection(w, transaction)">
+                <div class="flex flex-row justify-between space-x-10 items-center">
                     <span class="">@transaction.PostingDate.Date.ToString("MM/dd/yyyy")</span>
-                    <span class="@(transaction.Amount > 0 ? "text-green-700" : "text-red-700") font-bold">@transaction.Amount</span>
+                    <span class="text-xs border p-2 rounded rounded-full @(@transaction.Detail == "DEBIT" ? "border-red-600 text-red-600" : "border-green-600 text-green-600")">@transaction.Detail</span>
+                    <span class="@(transaction.Amount > 0 ? "text-green-600" : "text-red-600") font-bold">@transaction.Amount</span>
+                    @if (transaction.IsRecurrent)
+                    {
+                        <span>Recurrent</span>
+                    }
                 </div>
+
                 <span class="">@transaction.Description</span>
             </div>
         }
@@ -35,13 +107,54 @@
 </div>
 
 @code{
-
+    private string yearFilter = "all";
+    private string monthFilter = "all";
+    private string dayFilter = "all";
+    private string transactionNameFilter = String.Empty;
     private List<DebitCardTransaction> _debitCardTransactions = new();
+    private List<DebitCardTransaction> _debitCardTransactionsFiltered = new();
+    private List<DebitCardTransaction> selectedTransactions = new();
+
+    private int? ValidYear { get; set; }
+    private int? ValidMonth { get; set; }
+    private int? ValidDay { get; set; }
 
     protected override Task OnInitializedAsync()
     {
-        _debitCardTransactions = Task.Run(() => _csvService.GetDebitCardTransactionsAsync()).Result;
+        /*_debitCardTransactions = Task.Run(() => _csvService.GetDebitCardTransactionsAsync()).Result;
+        _debitCardTransactionsFiltered = _debitCardTransactions.ToList();
+        */
+
         return base.OnInitializedAsync();
+    }
+
+    private void AddToSelection(EventArgs evv, DebitCardTransaction transaction)
+    {
+        transaction.Selected = !transaction.Selected;
+    }
+
+    private void MakeSelectedTransactionsRecurrent()
+    {
+        foreach (var transaction in transactionsService.transactions?.Where(x => x.Selected))
+        {
+            transaction.IsRecurrent = !transaction.IsRecurrent;
+        }
+    }
+
+    private void ClearSelectedTransactions()
+    {
+        foreach (var transaction in @transactionsService.transactions?.Where(x => x.Selected))
+        {
+            transaction.Selected = false;
+        }
+    }
+
+    private void ClearRecurrentTransactions()
+    {
+        foreach (var transaction in @transactionsService.transactions?.Where(x => x.IsRecurrent))
+        {
+            transaction.IsRecurrent = false;
+        }
     }
 
 }

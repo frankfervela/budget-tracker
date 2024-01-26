@@ -1,0 +1,34 @@
+@page "/RecurrentTransactions"
+@using FinanceTracker.Services
+@using FinanceTracker.Models
+@inject TransactionsService TransactionsService
+
+<div class="h-screen dark:text-white">
+    <h3 class="text-2xl font-bold">Recurrent Transactions</h3>
+
+    @foreach (var transaction in TransactionsService.transactions?.Where(x => x.IsRecurrent))
+    {
+        <div class="flex flex-row justify-between items-center hover:bg-gray-800 hover:cursor-pointer hover:text-white p-2 @(transaction.Selected ? "bg-gray-800 text-white" : "")" @onclick="(w) => AddToSelection(w, transaction)">
+            <div class="flex flex-row justify-between space-x-10 items-center">
+                <span class="">@transaction.PostingDate.Date.ToString("MM/dd/yyyy")</span>
+                <span class="text-xs border p-2 rounded rounded-full @(@transaction.Detail == "DEBIT" ? "border-red-600 text-red-600" : "border-green-600 text-green-600")">@transaction.Detail</span>
+                <span class="@(transaction.Amount > 0 ? "text-green-600" : "text-red-600") font-bold">@transaction.Amount</span>
+                @if (transaction.IsRecurrent)
+                {
+                    <span>Recurrent</span>
+                }
+            </div>
+
+            <span class="">@transaction.Description</span>
+        </div>
+    }
+</div>
+
+@code {
+
+    private void AddToSelection(EventArgs evv, DebitCardTransaction transaction)
+    {
+        transaction.Selected = !transaction.Selected;
+    }
+
+}
