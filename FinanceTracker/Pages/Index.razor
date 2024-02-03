@@ -12,7 +12,7 @@
             <label for="year-filter">Filter By Year</label>
             <select id="year-filter" class="dark:bg-gray-900" @bind="yearFilter">
                 <option value="all">All</option>
-                @foreach (var year in @transactionsService.transactions?.Select(x => x.PostingDate.Year).Distinct())
+                @foreach (var year in transactionsService.transactions?.Select(x => x.PostingDate.Year).Distinct())
                 {
                     <option value="@year">@year</option>
                 }

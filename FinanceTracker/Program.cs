@@ -5,6 +5,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<CsvService>(x => new CsvService(@"C:\Users\fafv5\source\repos\FinanceTracker\FinanceTracker\csv files\debit_transactions.csv"));
 builder.Services.AddScoped<TransactionsService>(sb => new TransactionsService(sb.GetRequiredService<CsvService>()));
+builder.Services.AddScoped<CategoriesService>();
 
 var app = builder.Build();
 
