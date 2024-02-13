@@ -5,7 +5,6 @@
 
 
 <div class="dark:text-white">
-    <NavLink href="/RecurrentTransactions">Go TO Recurrent Payments</NavLink>
     <h1 class="text-2xl font-bold">Budget Tracker (@transactionsService.transactions?.Count(x => x.Selected))</h1>
     <div class="flex flex-row justify-between my-5">
         <span>
@@ -114,19 +113,6 @@
     private List<DebitCardTransaction> _debitCardTransactions = new();
     private List<DebitCardTransaction> _debitCardTransactionsFiltered = new();
     private List<DebitCardTransaction> selectedTransactions = new();
-
-    private int? ValidYear { get; set; }
-    private int? ValidMonth { get; set; }
-    private int? ValidDay { get; set; }
-
-    protected override Task OnInitializedAsync()
-    {
-        /*_debitCardTransactions = Task.Run(() => _csvService.GetDebitCardTransactionsAsync()).Result;
-        _debitCardTransactionsFiltered = _debitCardTransactions.ToList();
-        */
-
-        return base.OnInitializedAsync();
-    }
 
     private void AddToSelection(EventArgs evv, DebitCardTransaction transaction)
     {

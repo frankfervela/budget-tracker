@@ -1,6 +1,9 @@
 ﻿@inherits LayoutComponentBase
 
-<NavBarComponent/>
-<main class="p-10 dark:bg-gray-900 h-screen">
-     @Body
-</main>
+@*<NavBarComponent/>*@
+<div class="flex w-full">
+    <SideBarComponent/>
+    <main class="p-10 dark:bg-gray-900 h-screen w-3/4">
+        @Body
+    </main>
+</div>
